@@ -1,0 +1,108 @@
+This is a collection of playbooks I hacked together, to set up a Greenplum
+test cluster, using the sources directly from the GIT repository.
+
+Usage
+=====
+
+To go from scratch to a running cluster:
+
+0. Set ANSIBLE_CONFIG
+---------------------
+
+To save some typing, first do:
+
+  export ANSIBLE_CONFIG=`pwd`/ansible.cfg
+
+1. Set up a servers
+-------------------
+
+I used Centos 7. To test locally, you can use the scripts in
+virt-manager-scripts directory to create a bunch of local VMs. Or you can
+use e.g. Amazon AWS.
+
+If you're using AWS, make sure the Security Group settings allow the
+servers can communicate freely with each other.
+
+2. Edit Ansible config
+----------------------
+
+Open "ansible-hosts" in a text editor. Enter the IP addresses of the master
+and segment hosts in "ansible-hosts" file.
+
+3. Set up SSH keys
+
+Copy SSH key needed to log in to the servers to the same directory, in a
+file called "gpdb-ssh-key.pem". Put the corresponding public key in
+gpdb-ssh-key.pub
+
+For AWS, the SSH key is the key you created when you launched the instances.
+Use "ssh-keygen -y -f gpdb-ssh-key.pem > gpdb-ssh-key.pub" to extract the
+public key.
+
+Note: The private key is copied to the master VM, to allow connecting from
+master to segments without password. Don't use a valuable key that you use
+for other purposes, best to create a new one.
+
+3. Set up the cluster
+
+Run:
+
+ansible-playbook ansible-preparehosts.yml
+ansible-playbook ansible-compile.yml
+ansible-playbook ansible-distribute-binaries.yml
+ansible-playbook ansible-initcluster.yml
+
+If all went well, the cluster is now ready, and you can connect to the
+master on port 5432 with psql. However, the 'gpadmin' database user has no
+password set up. You can run psql as gpadmin on the master, which doesn't
+require a password, or you can set up a password with:
+
+ansible -u gpadmin gpdb-test-master -a "psql postgres -c \"alter user gpadmin password 'gpdbtestpw' \""
+
+
+
+
+Playbook descriptions
+=====================
+
+ansible-preparehosts.yml, ansible-compile.yml and
+ansible-distribute-binaries.yml are idempotent, which means that you can
+run and re-run them repeatedly. If one of them fails, you can fix it, and
+try again.
+
+ansible-initcluster.yml runs "gpinitsystem", so it's not idempotent. You can
+run ansible-delcluster.yml first and then retry, however.
+
+ansible-preparehosts.yml
+------------------------
+Sets up gpadmin user accounts, firewall rules, hosts files, and other such
+OS-level setup of the hosts. This is the first playbook to run on host systems.
+
+
+ansible-compile.yml
+-------------------
+Clones the GPDB repository from github, compiles it, and installs to master.
+
+Alternatively, you download and run the official binary installers
+
+ansible-distribute-binaries.yml
+-------------------------------
+
+Copies /usr/local/gpdb directory from master to all segments. Use this after
+compiling the binaries on master.
+
+There's a built-in script in Greenplum, gpseginstall, that does the same,
+but I found this easier.
+
+ansible-initcluster.yml
+-----------------------
+
+Initializes a new cluster, with gpinitsystem
+
+ansible-delcluster.yml
+-----------------------
+
+Forcibly stops all running GPDB processes, and removes the data directories
+on all hosts.
+
+

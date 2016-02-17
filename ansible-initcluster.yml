@@ -1,0 +1,39 @@
+---
+- hosts: master:segments
+  sudo: yes
+  tasks:
+    - name: Create /gpdata
+      file: path=/gpdata state=directory owner=gpadmin
+    - file: path=/gpdata/primary state=directory owner=gpadmin
+
+- hosts: master
+  sudo: yes
+  tasks:
+    - name: Create /gpdata/master
+      file: path=/gpdata/master state=directory owner=gpadmin
+
+- hosts: master
+  remote_user: gpadmin
+  tasks:
+    - name: Create gphosts file
+      template: src=hostsfile-template dest=/home/gpadmin/hostfile_gpdb
+
+    - name: Create gpinitsystem-config file
+      template: src=gpinitsystem-config dest=/home/gpadmin/gpinitsystem-config
+
+    # gpinitsystem gets stuck while trying to connect to master, if
+    # master's host key isn't already in known_hosts.
+    - name: Populate ssh known_hosts
+      command: ssh -o StrictHostKeyChecking=false gpdb-test-master true
+
+    - name: Run gpinitsystem
+      command: gpinitsystem -a -h hostfile_gpdb -c gpinitsystem-config
+      ignore_errors: yes
+
+    - name: Add MASTER_DATA_DIRECTORY to .bashrc
+      lineinfile: dest=/home/gpadmin/.bashrc regexp="^export MASTER_DATA_DIRECTORY=" line="export MASTER_DATA_DIRECTORY=/gpdata/master/gpseg-1"
+
+    - name: Allow remote logins
+      lineinfile: dest=/gpdata/master/gpseg-1/pg_hba.conf line="host all all 0.0.0.0/0 md5"
+    - name: Reload config
+      command: pg_ctl -D /gpdata/master/gpseg-1 reload

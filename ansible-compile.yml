@@ -1,0 +1,63 @@
+---
+- hosts: master:segments
+  sudo: yes
+  tasks:
+  - name: Install gcc (needed to install modules with pip)
+    yum: name=gcc
+
+  - name: install packages needed to run GPDB
+    yum: name=python-paramiko,epel-release,python-pip,net-tools,python-devel
+  - name: install PIP packages needed to run GPDB
+    pip: name=psi
+  - pip: name=lockfile
+
+- hosts: master
+  sudo: yes
+  tasks:
+  - name: install packages needed to build GPDB
+    yum: name="gcc,gcc-c++,git,bison,flex,readline-devel,zlib-devel,curl-devel,bzip2-devel,python-devel"
+
+  # Clone GPDB sources, and compile
+
+- hosts: master
+  remote_user: gpadmin
+  tasks:
+    # Uncomment this, to copy a local repository to the server (and the
+    # reference line in the next task too). With that, the "git clone"
+    # doesn't need to fetch the whole repository from github. That saves
+    # some time if you're running everything locally and have a slow network
+    # connection.
+    #
+    #- name: Speed up the clone by setting up a local reference repo
+    #  synchronize: src=/home/heikki/gpdb-ansible-scripts/gpdb.git/ dest=/home/gpadmin/gpdb.git/
+
+    # Pass recursive=no to not fetch submodules
+    - name: Clone GPDB repository
+      git: repo="https://github.com/hlinnaka/gpdb.git"
+           dest=/home/gpadmin/gpdb
+           recursive=no
+           version="{{ branchname | default('master') }}"
+#           reference=/home/gpadmin/gpdb.git
+
+    - name: Configure
+      command: ./configure --enable-debug --enable-depend --disable-gpfdist chdir=/home/gpadmin/gpdb creates=/home/gpadmin/gpdb/config.status
+
+    - name: Compile
+      command: make -j4 -s chdir=/home/gpadmin/gpdb
+
+    - name: Add greenplum_path.sh to .bashrc
+      lineinfile: dest=/home/gpadmin/.bashrc line=". /usr/local/gpdb/greenplum_path.sh"
+
+- hosts: master
+  sudo: yes
+  tasks:
+    - name: Install
+      command: make -s install chdir=/home/gpadmin/gpdb
+
+    - name: chown binaries to root
+      file:
+        path: /usr/local/gpdb
+        mode: 0755
+        owner: root
+        group: root
+        recurse: yes

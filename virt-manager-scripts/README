@@ -1,0 +1,58 @@
+This directory contains scripts I used to launch a bunch of CentOS VMs
+locally, using virt-manager. These can be used to set up a bunch of local
+VMs, instead of using a cloud provider.
+
+1. Download OS image.
+---------------------
+
+I used CentOS-7-x86_64-DVD-1511.iso
+
+  wget http://ftp.funet.fi/pub/mirrors/centos.org/7/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso
+
+The minimal image should work as well, but you'll have to remove a few
+packages from anaconda-common.cfg, and the Ansible scripts will then need
+to download them instead. Using the full image saves time and bandwidth
+if you need to delete an re-create the VMs many times.
+
+2. Create a network.
+--------------------
+
+The create-master.sh and create-segments.sh scripts assume that all the nodes
+are connected to a virtual network called "gpdb-network", with IP range
+192.168.120.*. The master is configured with static IP 192.168.120.254, and
+the segments are configured with static IPs in the range 192.168.120.100 -
+192.168.120.109.
+
+I didn't script this, I used virt-manager's GUI to create it.
+
+3. Create an SSH key to log into the VMs
+----------------------------------------
+
+ssh-keygen -f gpdb-ssh-key.pem -N ""
+
+4. Create the master and segment VMs
+------------------------------------
+
+Run as root:
+
+bash create-master.sh
+bash create-segments.sh
+
+This launches the installers to the background. You can connect to them
+using virt-manager's gui to follow the progress. Each VM will shut down when
+the installation is complete, which takes a few minutes.
+
+If one of the installations fail, you can simply delete the failed VM and
+re-run the script. The scripts will not modify an existing VM, so it's safe
+to re-run create-segments.sh if the creation of only some segments failed;
+it will re-launch the installer for any missing VMs.
+
+(The scripts need root access, because virt-install has to mount the DVD image
+with -o loop)
+
+5. Done!
+--------
+
+You now have a cluster of VMs set up. They have just the basic OS installed
+at the moment. Start them up, and you can now use the Ansible scripts in the
+parent directory to configure them as a GPDB cluster.

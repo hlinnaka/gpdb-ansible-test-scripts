@@ -1,0 +1,19 @@
+---
+- hosts: master
+  remote_user: gpadmin
+  tasks:
+    - name: Create tarball on master
+      command: "tar cvzf /home/gpadmin/gpdb.tar.gz /usr/local/gpdb"
+
+    - name: Distribute tarball to segments
+      command: "scp -o StrictHostKeyChecking=no /home/gpadmin/gpdb.tar.gz {{ item }}:/home/gpadmin/"
+      with_items: groups.segments
+
+- hosts: segments
+  sudo: yes
+  tasks:
+    - name: Extract tarball every segment
+      command: tar xzvf /home/gpadmin/gpdb.tar.gz -C /
+
+    - name: Add greenplum_path.sh to .bashrc
+      lineinfile: dest=/home/gpadmin/.bashrc line=". /usr/local/gpdb/greenplum_path.sh"

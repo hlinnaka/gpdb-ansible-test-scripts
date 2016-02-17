@@ -1,0 +1,6 @@
+[master]
+gpdb-test-master ansible_ssh_host=192.168.120.254
+
+[segments]
+gpdb-test-seg1 ansible_ssh_host=192.168.120.101
+gpdb-test-seg2 ansible_ssh_host=192.168.120.102

@@ -1,0 +1,35 @@
+# Prepare the basic OS configuration of the hosts.
+# This includes setting up gpadmin user, hosts file, firewall rules etc.
+#
+---
+- hosts: master:segments
+  sudo: yes
+  tasks:
+  - name: install packages needed by ansible
+    yum: name=libselinux-python
+  - name: create gpadmin user on all hosts
+    user: name=gpadmin
+  - authorized_key: user=gpadmin key="{{ lookup('file', 'gpdb-ssh-key.pem.pub') }}"
+  - authorized_key: user=gpadmin key="{{ lookup('file', 'gpdb-ssh-key.pem.pub') }}"
+
+  - name: Set hostnames
+    hostname: name="{{ inventory_hostname }}"
+
+  # Set OS Settings. Per the Greenplum installation manual (TODO: I didn't
+  # bother with all the settings, though, just the ulimits)
+  - name: Copy gpdb-limits.conf to raise ulimits
+    copy: src=gpadmin-limits.conf dest=/etc/security/limits.d/30-gpadmin-limits.conf
+
+  - name: Create hosts file
+    lineinfile:
+      dest=/etc/hosts
+      line="{{ hostvars[item]['ansible_eth0'].ipv4.address }} {{ item }}"
+    with_items: play_hosts
+
+- hosts: master
+  remote_user: gpadmin
+  tasks:
+  - name: Set up ssh key for passwordless login from master to segments
+    file: path=/home/gpadmin/.ssh state=directory
+  - copy: src=gpdb-ssh-key.pem dest=/home/gpadmin/.ssh/id_rsa  mode=0600
+  - copy: src=gpdb-ssh-key.pem.pub dest=/home/gpadmin/.ssh/id_rsa.pub mode=0644

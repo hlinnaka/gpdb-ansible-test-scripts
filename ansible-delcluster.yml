@@ -1,0 +1,18 @@
+---
+#- hosts: master
+#  remote_user: gpadmin
+#  tasks:
+#    - name: Run gpstop to stop the cluster gracefully
+#      command: gpstop
+#      ignore_errors: yes
+
+- hosts: master:segments
+  remote_user: gpadmin
+  tasks:
+    - name: Force kill postgres processes
+      command: pkill -9 postgres
+      ignore_errors: yes
+
+    - name: Remove data directories and socket files
+      shell: rm -rf /gpdata/* /tmp/.s.PGSQL.* /home/gpadmin/.gphostcache
+      ignore_errors: yes

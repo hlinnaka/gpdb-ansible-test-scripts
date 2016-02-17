@@ -1,0 +1,5 @@
+gpdb-ssh-key.pem
+gpdb-ssh-key.pem.pub
+anaconda-master.cfg
+anaconda-seg*.cfg
+CentOS*.iso

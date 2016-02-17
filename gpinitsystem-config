@@ -1,0 +1,29 @@
+ARRAY_NAME="GPDB test cluster"
+
+SEG_PREFIX=gpseg
+PORT_BASE=40000
+
+#### File system location(s) where primary segment data directories 
+#### will be created. The number of locations in the list dictate
+#### the number of primary segments that will get created per
+#### physical host (if multiple addresses for a host are listed in 
+#### the hostfile, the number of segments will be spread evenly across
+#### the specified interface addresses).
+declare -a DATA_DIRECTORY=(/gpdata/primary /gpdata/primary /gpdata/primary)
+
+#### OS-configured hostname or IP address of the master host.
+MASTER_HOSTNAME={{ hostvars[groups['master'][0]]['inventory_hostname'] }}
+
+#### File system location where the master data directory 
+#### will be created.
+MASTER_DIRECTORY=/gpdata/master
+
+#### Port number for the master instance. 
+MASTER_PORT=5432
+
+TRUSTED_SHELL=ssh
+CHECK_POINT_SEGMENTS=8
+ENCODING=UNICODE
+
+QE_MAX_CONNECT=30
+QE_SHARED_BUFFERS=4096
