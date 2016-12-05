@@ -1,0 +1,20 @@
+---
+#- hosts: master
+#  remote_user: gpadmin
+#  tasks:
+#    - name: Run gpstop to stop the cluster gracefully
+#      command: gpstop
+#      ignore_errors: yes
+
+#- hosts: master:segments
+#  remote_user: gpadmin
+#  tasks:
+#    - name: Force kill postgres processes
+#      command: pkill -9 postgres
+#      ignore_errors: yes
+
+- hosts: master
+  remote_user: gpadmin
+  tasks:
+    - name: Run gpstart to start the cluster
+      command: gpstart -a
