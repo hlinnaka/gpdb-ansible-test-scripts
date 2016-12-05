@@ -6,10 +6,13 @@
     yum: name=gcc
 
   - name: install packages needed to run GPDB
-    yum: name=python-paramiko,epel-release,python-pip,net-tools,python-devel
+    yum: name=python-paramiko,epel-release,net-tools,python-devel
+  - name: install pip (for some reason, this didn't work when merged with previous step)
+    yum: name=python-pip
   - name: install PIP packages needed to run GPDB
     pip: name=psi
   - pip: name=lockfile
+  - pip: name=psutil
 
 - hosts: master
   sudo: yes
