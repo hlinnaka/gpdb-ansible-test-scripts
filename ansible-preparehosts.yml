@@ -24,7 +24,7 @@
     lineinfile:
       dest=/etc/hosts
       line="{{ hostvars[item]['ansible_eth0'].ipv4.address }} {{ item }}"
-    with_items: play_hosts
+    with_items: "{{ ansible_play_hosts }}"
 
 - hosts: master
   remote_user: gpadmin

@@ -7,7 +7,7 @@
 
     - name: Distribute tarball to segments
       command: "scp -o StrictHostKeyChecking=no /home/gpadmin/gpdb.tar.gz {{ item }}:/home/gpadmin/"
-      with_items: groups.segments
+      with_items: "{{ groups.segments }}"
 
 - hosts: segments
   sudo: yes
