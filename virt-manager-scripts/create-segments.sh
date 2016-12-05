@@ -29,5 +29,5 @@ chown centos.centos /home/centos/.ssh/authorized_keys
 %end
 EOF
 
-    virt-install --connect=qemu:///system --name gpdb-seg$i-vm --memory 1024 --disk size=3 --location=CentOS-7-x86_64-DVD-1511.iso --initrd-inject=anaconda-seg$i.cfg --extra-args "ks=file:/anaconda-seg$i.cfg" --network=network=gpdb-network --network=default --vcpus=2 --noautoconsole
+    virt-install --connect=qemu:///system --name gpdb-seg$i-vm --memory 1224 --disk size=5 --location=CentOS-7-x86_64-DVD-1511.iso --initrd-inject=anaconda-seg$i.cfg --extra-args "ks=file:/anaconda-seg$i.cfg" --network=network=gpdb-network --network=default --vcpus=2 --noautoconsole
 done

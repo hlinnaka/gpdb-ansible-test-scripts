@@ -37,4 +37,4 @@ EOF
 
 ssh-keygen -R 192.168.120.254
 
-virt-install --connect=qemu:///system --name gpdb-test-master-vm --memory 1024 --disk size=3 --location=./CentOS-7-x86_64-DVD-1511.iso --initrd-inject=anaconda-master.cfg --extra-args "ks=file:/anaconda-master.cfg" --network=network=gpdb-network --network=default --vcpus=4 --noautoconsole
+virt-install --connect=qemu:///system --name gpdb-test-master-vm --memory 1224 --disk size=4 --location=./CentOS-7-x86_64-DVD-1511.iso --initrd-inject=anaconda-master.cfg --extra-args "ks=file:/anaconda-master.cfg" --network=network=gpdb-network --network=default --vcpus=4 --noautoconsole
